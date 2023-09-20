@@ -1,0 +1,10 @@
+1#rockstar#6-18-2018#3#It's alright. Gives me some trouble some times. 
+2#rockstar#2-11-2019#5#Awesome car. Loved it.
+3#suave#3-15-2019#4#Nice car. Have driven it quite a bit with much trouble.
+4#trend#3-12-2020#3#Had issues with the brakes.
+5#rockstar#5-12-2020#3#Average car.
+6#trend#06-14-2020#4#Good car. The media system is not great though.
+7#suave#09-16-2020#2#I do not like it. Don't get it.
+8#starship#09-19-2020#4#Nice car. Would recommend it.
+9#rockstar#09-19-2020#2#Don't get it
+10#suave#09-20-2020#1#Don't recommend the car. Didn't like it!!! Don't buy it.

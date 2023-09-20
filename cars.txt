@@ -1,0 +1,5 @@
+rockstar#suv#2018#39000.0
+suave#sedan#2000#38000.5
+trend#truck#2015#45000.0
+starship#hatchback#2019#29000.0
+maverick#convertible#2020#35000.0
