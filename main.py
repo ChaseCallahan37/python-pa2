@@ -63,7 +63,7 @@ def menu_choice():
     return input("\nPlease enter your choice: ")
 
 def vehicle_menu():
-    [_, add_vehicle, edit_vehicle] = use_vehcile()
+    [_, add_vehicle, edit_vehicle, delete_vehicle] = use_vehcile()
 
     choice = display_vehicle_menu()
 
@@ -74,6 +74,7 @@ def vehicle_menu():
         edit_vehicle()
         return vehicle_menu()
     if(choice == "3"):
+        delete_vehicle()
         return vehicle_menu()
     if(choice == "4"):
         print("Taking you back to main menu!")
@@ -101,7 +102,7 @@ def use_vehcile():
             "col": 1,
         },
         "manufactureYear": {
-            "fromFile": lambda x: datetime.strptime(x, "%Y"),
+            "fromFile": lambda x: int(x),
             "col": 2,
         },
         "price": {
@@ -144,24 +145,15 @@ def use_vehcile():
             return validate_price(input("Please enter a valid price: "))
         
     schema["price"]["validate"] = validate_price
-        
-    
-    def find_vehicle(search_val=""):
-        display_items(vehicles, schema)
-        search_val = input("Enter the name of the vehicle you are looking for: ")
-        found_vehicle = next(map(lambda v: v[schema["name"]["col"]] == search_val, vehicles))
-        new_vehicle = []
-        for name, field in schema.items():
-            # Verifies input entered in validation function defined in schema
-            if(input(f"{name}: {found_vehicle[schema[name]['col']]}\nEnter 'y' to edit: ").lower() == "y"):
-                new_vehicle.append(field["validate"](input(f"Please enter a value for {name}: ")))
-            else:
-                new_vehicle.append(found_vehicle[schema[name]['col']])
-        
-        vehicles.remove(found_vehicle)
-        vehicles.append(new_vehicle)
 
-        print(index)
+    def find_vehicle():
+        display_items(vehicles, schema)
+        search_val = input("Insert the name of the vehicle you are searching for: ")
+        found_vehicle = find_item(search_val, schema, vehicles)
+        if(found_vehicle == None and input(f"Vehicle with name: {search_val} not found, continue? (y/n): ") == "y"):
+            return find_item()
+        return found_vehicle
+        
 
     def add_vehicle():
         vehicle = []
@@ -175,16 +167,43 @@ def use_vehcile():
         write_file("cars", vehicles)
 
     def edit_vehicle():
-        display_items(vehicles, schema)
-        index = find_vehicle()
+        found_vehicle = find_vehicle()
         
+        if(found_vehicle == None): 
+            return
+        
+        new_vehicle = []
+        for name, field in schema.items():
+            # Verifies input entered in validation function defined in schema
+            if(input(f"{name}: {found_vehicle[schema[name]['col']]}\nEnter 'y' to edit: ").lower() == "y"):
+                new_vehicle.append(field["validate"](input(f"Please enter a value for {name}: ")))
+            else:
+                new_vehicle.append(found_vehicle[schema[name]['col']])
+        
+        vehicles.remove(found_vehicle)
+        vehicles.append(new_vehicle)
+        write_file("cars", vehicles)
 
-            
+    def delete_vehicle():
+        found_vehicle = find_vehicle()
 
+        if(found_vehicle == None):
+            return None
+        
+        print(f"\nWould you like to remove this vehicle?\n\n{prep_display_item(found_vehicle, schema)}\n")
+        if(input("(Please enter y/n): ").lower() == "y"):
+            print("\nRemoving vehicle...")
+            pause()
+            vehicles.remove(found_vehicle)
+            write_file("cars", vehicles)
+
+
+    # Expose vehcile API functions
     return [
         vehicles,
         add_vehicle,
-        edit_vehicle
+        edit_vehicle,
+        delete_vehicle
     ]
 
 # FILE HANDLING
@@ -228,11 +247,21 @@ def pause():
 def display_items(items, schema):
     to_print = "\n"
     for item in items:
-        for name, field in schema.items():
-            to_print = to_print + (f"{name} {item[field['col']]:<15}")
+        to_print = to_print + prep_display_item(item, schema)
         to_print = to_print + "\n"
     print(to_print)
 
+def prep_display_item(item, schema):
+    to_print = ""
+    for name, field in schema.items():
+        to_print = to_print + (f"{name} {item[field['col']]:<15}")
+    return to_print
 
+def find_item(search_val, schema, items):
+    for field in schema.values():
+        for item in items:
+            if(item[field["col"]] == search_val):
+                return item
+    return None
 
 main()
