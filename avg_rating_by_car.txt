@@ -1,0 +1,24 @@
+Vehicle: davey-jones had 0 reviews and they were: 
+
+Vehicle: hooah had 0 reviews and they were: 
+
+Vehicle: maverick had 0 reviews and they were: 
+
+Vehicle: rockstar had 6 reviews and they were: It's alright. Gives me some trouble some times. 
+Awesome car. Loved it.
+Average car.
+Don't get it
+Aweful, it destroyed my back!!
+Great stuff!
+
+Vehicle: starship had 2 reviews and they were: Nice car. Would recommend it.
+pretty good
+
+Vehicle: suave had 4 reviews and they were: Nice car. Have driven it quite a bit with much trouble.
+I do not like it. Don't get it.
+Don't recommend the car. Didn't like it!!! Don't buy it.
+It was a pretty darn good ride
+
+Vehicle: trend had 3 reviews and they were: Had issues with the brakes.
+Good car. The media system is not great though.
+It was the best ride I have ever, ever, ever, had!

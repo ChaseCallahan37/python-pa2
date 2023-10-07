@@ -1,6 +1,7 @@
 from datetime import datetime 
 from operator import itemgetter
 from functools import reduce
+import re
 
 # Schemas used for validation and reading in from files
 
@@ -49,7 +50,7 @@ def vehicle_menu():
         return vehicle_menu()
     if(choice == "2"):
         vehicle_bag["edit_vehicle"]()
-        return review_menu()
+        return vehicle_menu()
     if(choice == "3"):
         vehicle_bag["delete_vehicle"]()
         return vehicle_menu()
@@ -148,6 +149,13 @@ def use_vehcile():
 
     
     def validate_type(type):
+        car_types = ["sedan", "hatchback", "suv", "truck", "van", "convertible"]
+
+        pattern = r"(?i)\b(" + '|'.join(car_types) + r")\b"
+
+        if (re.search(pattern, type) == None):
+            return(validate_type(input(f"Please enter one of the following types: {', '.join(car_types)}: ")))
+
         return type
     
     schema["type"]["validate"] = validate_type
@@ -155,7 +163,10 @@ def use_vehcile():
     
     def validate_man_year(year):
         try:
-            return int(year)
+            num = int(year)
+            if not (2010 <= num <= 2020):
+                return validate_man_year(input("Please enter a year between 2010 and 2020: "))
+            return num
         except ValueError:
             return validate_man_year(input("Please enter a valid number: "))
         
@@ -164,7 +175,10 @@ def use_vehcile():
         
     def validate_price(price):
         try:
-            return float(price)
+            num = float(price)
+            if not (0 < num):
+                return validate_price(input("Please enter a price greater than $0.00: "))
+            return num
         except ValueError:
             return validate_price(input("Please enter a valid price: "))
         
@@ -308,14 +322,6 @@ def use_reviews():
         return comment
         
     schema["comment"]["validate"] = validate_comment
-
-    # def find_ve():
-    #     display_items(vehicles, schema)
-    #     search_val = input("Insert the name of the vehicle you are searching for: ")
-    #     found_vehicle = find_item(search_val, schema, vehicles)
-    #     if(found_vehicle == None and input(f"Vehicle with name: {search_val} not found, continue? (y/n): ") == "y"):
-    #         return find_item()
-    #     return found_vehicle
         
 
     def add_review():
@@ -329,39 +335,8 @@ def use_reviews():
 
         write_file("reviews", reviews)
 
-    # def edit_vehicle():
-    #     found_vehicle = find_vehicle()
-        
-    #     if(found_vehicle == None): 
-    #         return
-        
-    #     new_vehicle = []
-    #     for name, field in schema.items():
-    #         # Verifies input entered in validation function defined in schema
-    #         if(input(f"{name}: {found_vehicle[schema[name]['col']]}\nEnter 'y' to edit: ").lower() == "y"):
-    #             new_vehicle.append(field["validate"](input(f"Please enter a value for {name}: ")))
-    #         else:
-    #             new_vehicle.append(found_vehicle[schema[name]['col']])
-        
-    #     vehicles.remove(found_vehicle)
-    #     vehicles.append(new_vehicle)
-    #     write_file("cars", vehicles)
 
-    # def delete_vehicle():
-    #     found_vehicle = find_vehicle()
-
-    #     if(found_vehicle == None):
-    #         return None
-        
-    #     print(f"\nWould you like to remove this vehicle?\n\n{prep_display_item(found_vehicle, schema)}\n")
-    #     if(input("(Please enter y/n): ").lower() == "y"):
-    #         print("\nRemoving vehicle...")
-    #         pause()
-    #         vehicles.remove(found_vehicle)
-    #         write_file("cars", vehicles)
-
-
-    # Expose vehcile API functions
+    # Expose review API functions
     return {
         "reviews": reviews,
         "schema": schema,
@@ -376,7 +351,11 @@ def use_reports():
         def get_year():
             year = input("please enter the year you are looking for: ")
             try:
-                return int(year)
+                num = int(year)
+                if not (2015 <= num <= 2020):
+                    print("Please enter a year between 2015 and 2020")
+                    return get_year()
+                return num
             except ValueError:
                 print("please enter a valid year")
                 return get_year()
@@ -404,10 +383,47 @@ def use_reports():
         
 
     def vehicle_statistics():
-        print("vehicle statistics")
+        vehicle_bag = use_vehcile()
+        review_bag = use_reviews()
+
+        vehicles_names = list(map(lambda x: x[vehicle_bag["schema"]["name"]["col"]] , sorted(vehicle_bag["vehicles"], key=lambda x: x[vehicle_bag["schema"]["name"]["col"]])))
+
+        reviews_by_car = sorted(review_bag["reviews"], key=lambda x: x[review_bag["schema"]["vehicle_name"]["col"]])
+
+        overview_data = list(map(lambda v: [
+            v, 
+            len(list(filter(lambda r: r[review_bag["schema"]["vehicle_name"]["col"]] == v,reviews_by_car))), 
+            "\n".join(list(map(lambda x: x[review_bag["schema"]["comment"]["col"]], list(filter(lambda r: r[review_bag["schema"]["vehicle_name"]["col"]] == v, reviews_by_car)))))
+            ] 
+            , vehicles_names))
+        
+        report = "\n\n".join(list(map(lambda x: f"Vehicle: {x[0]} had {x[1]} reviews and they were: {x[2]}", overview_data)))
+
+        write_file("avg_rating_by_car", [report], False)
+        print(report)
+
+        pause()
 
     def view_reviews():
-        print("view reviews")
+
+        review_bag = use_reviews()
+
+        positive_words = read_file("positive_word_dictionary")
+
+        pattern = r"\b(?i)(" + '|'.join(map(re.escape, positive_words)) + r")\b"
+
+        comments = list(map( lambda x: x[review_bag["schema"]["comment"]["col"]], review_bag["reviews"]))
+
+        positive_comments = list(filter(lambda x: re.search(pattern, x), comments))
+
+        report = f"There were a total of {len(positive_comments)} positive comments and they were:\n" + "\n".join(positive_comments)
+
+        write_file("comments_with_positive_words", [report], False)
+        print(report)
+        
+        pause()
+
+
 
     return {
         "year_statistics": year_statistics,
@@ -417,10 +433,14 @@ def use_reports():
 
 # FILE HANDLING
 
-def read_file(file_name, schema):
+def read_file(file_name, schema = None):
     file = open(file_name + ".txt", "r")
     items = []
     for line in list(map(lambda x: x.strip("\n"), file.readlines())):
+        if(schema == None):
+            items.append(line)
+            continue
+
         items.append(parse_line(line.split("#"), schema))
     file.close()
 
