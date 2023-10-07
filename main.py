@@ -1,21 +1,16 @@
 from datetime import datetime 
-from operator import itemgetter
 from functools import reduce
 import re
 
-# Schemas used for validation and reading in from files
-
-
-vehicles = []
-reviews = []
 
 
 def main():
-
+    # Loop responsible for overall control of menu
     while loop_menu() != None:
         pause()
     print("Thank you for using my program!")
 
+# Main menu options and logic for program continuation
 def loop_menu():
     choice = menu_choice()
     if(choice == "1"):
@@ -40,7 +35,13 @@ def menu_choice():
     print("4. Exit")
     return input("\nPlease enter your choice: ")
 
+
 def vehicle_menu():
+    # bag is a dictionary of available
+    # functions created in the use_vehicle function
+    # this abstracts away the logic for handling 
+    # maintenance of vehicles. Similar logic is used
+    # for reviews and reports
     vehicle_bag = use_vehcile()
 
     choice = display_vehicle_menu()
@@ -116,6 +117,8 @@ def display_report_menu():
     print('4. Exit Report Menu')
     return input("\nPlease enter your choice: ")
 
+# Responsible for containing all vehicle logic,
+# including schema, persistence, and mutation logic
 def use_vehcile():
     schema = {
         "name": {
@@ -136,8 +139,13 @@ def use_vehcile():
         }
     }
 
+    # reliance on generic utility functions such as this can be found throughout program
     vehicles = read_file("cars", schema)
 
+    # VALIDATION FUNCTIONS
+    # These functions are used to validate
+    # the users input for both creation and mutation
+    # for all fields of the schema
     def validate_name(name):
         if(len(name) <= 1):
             return validate_name(input("Please enter a name of at least one character: "))
@@ -248,6 +256,7 @@ def use_vehcile():
         "find_vehicle": find_vehicle
     }
 
+# Reuse of design from Vehicle
 def use_reviews():
     schema = {
         "id": {
@@ -345,6 +354,7 @@ def use_reviews():
         # delete_vehicle
     }
 
+# Reuse of use_vehcile API
 def use_reports():
 
     def year_statistics():
@@ -408,8 +418,9 @@ def use_reports():
 
         review_bag = use_reviews()
 
-        positive_words = read_file("positive_word_dictionary")
+        positive_words = read_file("positive_word_dictionary")  
 
+        # Creates regex pattern for comparison to comments
         pattern = r"\b(?i)(" + '|'.join(map(re.escape, positive_words)) + r")\b"
 
         comments = list(map( lambda x: x[review_bag["schema"]["comment"]["col"]], review_bag["reviews"]))
@@ -424,7 +435,7 @@ def use_reports():
         pause()
 
 
-
+    # Expose Report API functions
     return {
         "year_statistics": year_statistics,
         "vehicle_statistics": vehicle_statistics,
@@ -433,6 +444,8 @@ def use_reports():
 
 # FILE HANDLING
 
+# Generic file reading method. flexible for use with
+# and without a schema
 def read_file(file_name, schema = None):
     file = open(file_name + ".txt", "r")
     items = []
@@ -446,12 +459,15 @@ def read_file(file_name, schema = None):
 
     return items
 
+# Used to parse a line to match a schema specified
 def parse_line(line, schema):
     item = []
     for info in schema.values():
         item.append(info["from_file"](line[info["col"]]))
     return item
 
+# Generic write file function, allows for delimiter 
+# flag for writing of reports
 def write_file(file_name, items, delimiter=True):
     file = open(file_name + ".txt", "w")
 
@@ -465,7 +481,7 @@ def write_file(file_name, items, delimiter=True):
 
     file.close()
 
-# Utility
+# Generic Utility
 def show_invalid(value):
     print(f"\n{value} is not a valid value here\nPlease press enter....")
     input()
@@ -476,6 +492,7 @@ def pause():
     input()
     print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
 
+# Generic display function to put items in a table
 def display_items(items, schema):
     to_print = "\n"
     for item in items:
@@ -483,12 +500,15 @@ def display_items(items, schema):
         to_print = to_print + "\n"
     print(to_print)
 
+# Preps each line for display based off of schema provided
 def prep_display_item(item, schema):
     to_print = ""
     for name, field in schema.items():
         to_print = to_print + (f"{name} {item[field['col']]:<15}")
     return to_print
 
+# Generic find function, searches one layer deep in a list.
+# Will search all fields specified in schema paramater
 def find_item(search_val, schema, items):
     for field in schema.values():
         for item in items:
