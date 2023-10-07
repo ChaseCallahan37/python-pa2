@@ -4,4 +4,3 @@ trend#truck#2015#45000.0
 starship#hatchback#2019#29000.0
 maverick#convertible#2020#35000.0
 davey-jones#convertible#2001#5500.0
-johnshon#sedan#2018#8888.0
